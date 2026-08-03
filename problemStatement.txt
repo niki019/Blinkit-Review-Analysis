@@ -1,0 +1,114 @@
+Discovery Engine & Problem Statement
+Understanding why Blinkit users don't explore new categories
+
+1. Background
+Quick-commerce platforms like Blinkit have become part of users' weekly routines, with recurring orders concentrated in groceries, snacks & beverages, and household essentials. Over time, this convenience produces highly repetitive behavior: users purchase the same set of products and rarely explore other categories the platform offers.
+Strategic goal: increase the percentage of Monthly Active Customers (MACs) who purchase from at least one new category every month on Blinkit.
+This document defines the discovery engine — an AI-assisted analysis pipeline over public online discussion — and the primary-research plan needed to validate it, so the two together can be built into a working “review analyzer” specifically for Blinkit.
+
+2. Discovery Engine — Data Sources
+The engine is built specifically for the Blinkit platform, capturing feedback strictly from actual customers or users of the platform. It takes reviews from different platforms such as Google Play Store reviews, Apple App Store reviews, Trustpilot, Quora, and related community forums/platforms found via the search query:
+https://www.google.com/search?q=blinkit+reviews&oq=blinkit+reviews+&gs_lcrp=EgZjaHJvbWUqCggAEEUYFhgeGDsyCggAEEUYFhgeGDsyBwgBEAAYgAQyBwgCEAAYgAQyBwgDEAAYgAQyBwgEEAAYgAQyCAgFEAAYFhgeMggIBhAAGBYYHjIICAcQABgWGB4yCAgIEAAYFhgeMggICRAAGBYYHtIBCTQzOTNqMGoxNagCCLACAfEFkxkopDysmjo&sourceid=chrome&source=chrome.rb&ie=UTF-8
+
+The data sources include:
+- App Store / Play Store reviews: Star-rated feedback tied to specific app versions; feature-level complaints and praise. Collection approach: Public review APIs / scraping by Blinkit App ID, pulled on a rolling window, tagged with rating + version.
+- Review Platforms (e.g., Trustpilot, MouthShut): In-depth customer reviews and ratings detailing user experience, delivery quality, and customer support. Collection approach: Scraped from dedicated Blinkit company/review pages on a rolling window.
+- Q&A & Discussion Forums (e.g., Quora, Reddit): Unfiltered customer questions, detailed user experiences, habit talk, comparison threads, and "why I stopped using X" posts. Collection approach: Scraping relevant Quora topics/threads and subreddit search via Reddit API (PRAW), pulling comment threads for context.
+- Community forums (local, parenting, personal-finance): Category-specific need discussions (e.g., baby care, pet care) not tied to any one platform. Collection approach: Targeted forum search by category keyword, manual curation of relevant threads.
+- Social media (X/Twitter, Instagram comments, Facebook groups): Real-time frustration/praise, viral complaints, influencer-driven category discovery. Collection approach: Hashtag + brand-mention search, public post scraping within platform ToS.
+- Product reviews (on-platform, marketplace): Category-specific trust signals — quality doubts, packaging, authenticity concerns. Collection approach: Scraped per product/category page, paired with star rating and verified-purchase flag.
+- Quick-commerce discussion threads (comparison blogs, YouTube comments): Cross-platform comparisons, feature requests, discovery-channel mentions. Collection approach: Targeted search + comment scraping on comparison content.
+
+3. Analysis Workflow — How Data Is Gathered and Processed
+The pipeline runs in seven stages, from raw ingestion to a validated insight log:
+Stage 1: Ingest
+- What happens: Pull raw text from all seven sources on a rolling window; store with metadata (source, date, rating/upvotes, platform)
+- Output: Raw corpus, deduplicated
+
+Stage 2: Clean & filter
+- What happens: Language-detect (keep English + transliterated Hinglish), strip spam/bot content, remove non-review noise
+- Output: Cleaned corpus
+
+Stage 3: Sentiment tag
+- What happens: Sentence-level sentiment scoring (positive/negative/neutral) per post
+- Output: Sentiment-tagged corpus
+
+Stage 4: Theme extraction
+- What happens: Topic modeling (e.g., BERTopic/LDA) plus a keyword-anchored taxonomy (see below) to pull out recurring themes per research question
+- Output: Theme-tagged corpus, theme frequency counts
+
+Stage 5: Clustering & triangulation
+- What happens: Group similar mentions across sources; weight by frequency × sentiment intensity; flag themes appearing in >= 3 sources as higher-confidence
+- Output: Ranked theme list with source diversity score
+
+Stage 6: Insight synthesis
+- What happens: For each high-confidence theme, write a one-line insight + 2-3 illustrative (paraphrased) quotes + affected segment if inferable
+- Output: Insight brief per theme
+
+Stage 7: Human validation
+- What happens: Primary research (interviews) checks each insight: confirmed / partially confirmed / contradicted / new-finding
+- Output: Validated insight log
+
+4. How Themes Are Identified
+Two methods run in parallel and are cross-checked against each other: (1) unsupervised topic modeling to surface themes the taxonomy might miss, and (2) a keyword-anchored taxonomy mapped directly to the discovery engine's guiding research questions, so every extracted theme can be traced back to a specific question it helps answer.
+
+Research questions and theme tags to extract:
+- Why do users repeatedly buy the same categories?: habit/convenience, time-saving, “autopilot ordering”, loyalty to known brands
+- What prevents exploration of new categories?: quality doubt, price sensitivity, no felt need, trust deficit, unfamiliarity
+- How do users discover products today?: recommendation module, search, influencer/social mention, word of mouth, banner/ad
+- What role do habits play?: repeat-cart, saved lists, subscription/reorder behavior, routine framing
+- What info do users need before trying a new category?: reviews, brand recognition, return policy, sample/trial availability, price transparency
+- What frustrations emerge repeatedly?: irrelevant recommendations, poor search, delivery/quality issues, dark patterns
+- Which segments are more likely to experiment?: life-stage triggers (new parent, new pet, relocation), deal-seekers, high app-usage frequency
+- What unmet needs emerge consistently?: category gaps, bundle requests, verification/authenticity asks, subscription flexibility
+
+5. How Insights Are Generated
+For each theme surfaced above, the engine produces an insight brief consisting of:
+1. The theme, stated as a one-line insight (e.g., “users avoid new categories primarily due to unverified product quality, not price”)
+2. Its frequency and the number of distinct sources it appears in (source diversity is treated as a proxy for how widespread — vs. isolated — the pattern is)
+3. Its sentiment profile (is this a complaint, a request, or neutral description of behavior?)
+4. 2–3 illustrative mentions, paraphrased rather than quoted verbatim
+5. The segment it appears to affect, where inferable from context (e.g., a subreddit thread about new parents)
+Themes are ranked by (frequency × source diversity) so the highest-confidence, most cross-cutting patterns surface first — rather than whatever is loudest on a single platform.
+
+6. Validating Insights Through Primary Research
+AI-surfaced themes are a hypothesis set, not a conclusion. 5–6 interviews with respondents from the chosen target segment are used to confirm, refine, or challenge each one.
+
+6.1 Segment selection
+Choose one segment to focus interviews on — ideally one the discovery engine flagged as having a plausible unmet need or a life-stage trigger (e.g., grocery/household-essentials buyers who recently had a life change such as a new baby, new pet, or relocation). A focused segment produces sharper, more actionable findings than a broad cross-section.
+
+6.2 Interview guide
+A semi-structured guide, roughly 30–40 minutes per interview, covering:
+- Warm-up / current habits: Walk me through your last few orders on [platform]. What do you usually buy?
+- Habit & repetition: Do you find yourself reordering the same things? What makes that easy or appealing?
+- Barriers to exploration: Has there been a category you considered trying but didn't? What stopped you?
+- Discovery: How do you usually find out about new products on the app — or outside it?
+- Trust & information needs: What would you need to see or know before trying an unfamiliar product or category?
+- Frustrations: Tell me about a time the app recommended something unhelpful or irrelevant.
+- Life-stage / trigger events: Has anything changed recently in your household that changed what you shop for?
+- Workarounds: If you needed something outside your usual categories, where would you actually go instead?
+
+6.3 Validation logic
+Each AI-surfaced insight is checked against interview evidence and classified as one of four outcomes:
+- Confirmed: >= 4 of 5–6 interviewees independently describe the same pattern the AI surfaced. Action: Treat as a core, evidence-backed input to the problem statement.
+- Partially confirmed: Some interviewees echo it, but with a different root cause or a narrower condition. Action: Refine the insight's scope/segment before using it.
+- Contradicted: Interviewees describe the opposite of what the online discussion suggested. Action: Flag as an online-discourse bias (e.g., vocal minority); drop or heavily caveat.
+- New finding: Interviewees raise something the AI discovery engine never surfaced. Action: Add as a primary-research-only insight; note it as a gap in the online-source coverage.
+
+7. Problem Statement Template
+Once research is complete, frame the problem using this structure — each row should be answerable with evidence from both the discovery engine and the interviews, not assumption:
+- Target user segment: Who, specifically — defined by behavior/life-stage, not demographics alone?
+- Root cause: What is the deepest reason exploration doesn't happen — not the symptom, the cause?
+- Existing workarounds: What do users do instead today — another app, offline store, asking a friend, not solving the need at all?
+- Why this creates user value: What does solving it save the user — time, money, risk, mental effort?
+- Why this makes business sense: How does it tie to retention, basket size, category penetration, or CAC efficiency?
+
+8. What the Review Analyzer Tool Should Do
+Translating this workflow into a working tool, the review analyzer should be able to:
+- Ingest and tag raw text from the seven source types with consistent metadata (source, date, rating/engagement, platform)
+- Run sentiment scoring and theme extraction (topic modeling + taxonomy) on the cleaned corpus
+- Surface a ranked, filterable theme list (by frequency, sentiment, source diversity, and mapped research question)
+- Display illustrative (paraphrased) examples per theme with source attribution
+- Maintain a running validated-insight log where interview findings can be attached to each AI-surfaced theme with a confirmed/partial/contradicted/new tag
+- Export a problem-statement draft pre-filled from validated, high-confidence insights
+- MCP Integration: Connect directly to the custom n8n MCP Server Workflow (https://nikiagape.app.n8n.cloud/workflow/h7hGpQhZBPsHDy58) to execute data collection queries and retrieve formatted payloads dynamically.

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "n8n-mcp": {
+      "type": "http",
+      "url": "https://nikiagape.app.n8n.cloud/mcp-server/http",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyY2FmNjQ3OS1iYmY2LTQ1YjAtYTIyMy0wNmQ1MDU4MzM2NDYiLCJpc3MiOiJuOG4iLCJhdWQiOiJtY3Atc2VydmVyLWFwaSIsImp0aSI6IjcxYmU5MDBhLTVhZjQtNDQ4MC1hYmVkLTQyMDAwYTliNjA2MCIsImlhdCI6MTc4NTc4NTQ4MH0.unl30HmfIAWiY7uDN57qQ3Tz29vT3PWecoYNqFJJ8Us"
+      }
+    }
+  }
+}

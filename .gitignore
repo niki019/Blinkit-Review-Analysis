@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+reviews.db
+reviews.db-shm
+reviews.db-wal
+raw_reviews.json
+normalized_reviews.json
+mcp_server/credentials.json
+mcp_server/token.json
+.pytest_cache/
