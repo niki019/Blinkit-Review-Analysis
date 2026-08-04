@@ -4,3 +4,6 @@ sqlalchemy
 pydantic
 google-auth-oauthlib
 google-api-python-client
+streamlit
+pandas
+plotly
