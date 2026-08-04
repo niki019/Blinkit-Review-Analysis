@@ -5,6 +5,8 @@ from sqlalchemy import func
 from database import SessionLocal, engine, Base
 from models import RawReview, ExtractedTheme, ValidatedInsight
 from mcp_server.google_client import GoogleWorkspaceClient
+import os
+import requests
 
 # Ensure DB is created
 Base.metadata.create_all(bind=engine)
@@ -22,7 +24,7 @@ def get_db_session():
 db = get_db_session()
 
 # --- Tabs ---
-tab1, tab2, tab3 = st.tabs(["📊 Themes & Insights", "📝 Validation Workspace", "🗃️ Raw Reviews"])
+tab1, tab2, tab3, tab4 = st.tabs(["📊 Themes & Insights", "📝 Validation Workspace", "🗃️ Raw Reviews", "🤖 AI Chatbot"])
 
 # --- TAB 1: Themes & Insights ---
 with tab1:
@@ -204,3 +206,84 @@ with tab3:
         } for r in reviews])
         
         st.dataframe(df_reviews, use_container_width=True, hide_index=True)
+
+
+# --- TAB 4: AI Chatbot ---
+with tab4:
+    st.header("🤖 Chat with Blinkit Insights")
+    st.markdown("Ask the AI questions about the extracted themes, problem statements, and raw reviews.")
+    
+    # Initialize chat history
+    if "messages" not in st.session_state:
+        st.session_state.messages = [
+            {"role": "assistant", "content": "Hello! I am your Blinkit Research Assistant. Ask me anything about our customer feedback and the problem statement!"}
+        ]
+        
+    # Display chat messages from history on app rerun
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+            
+    # React to user input
+    if prompt := st.chat_input("E.g., What prevents users from trying new categories?"):
+        # Display user message in chat message container
+        st.chat_message("user").markdown(prompt)
+        # Add user message to chat history
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        
+        with st.chat_message("assistant"):
+            # Build Context from DB
+            db_context = "Here is the current state of the Blinkit Review Database:\n"
+            
+            # Get top themes
+            top_themes = db.query(ExtractedTheme.theme_tag, func.count(ExtractedTheme.id).label('count')).group_by(ExtractedTheme.theme_tag).order_by(func.count(ExtractedTheme.id).desc()).limit(15).all()
+            if top_themes:
+                db_context += "\nTop Extracted Themes from Customer Reviews:\n"
+                for t in top_themes:
+                    db_context += f"- {t.theme_tag} ({t.count} mentions)\n"
+                    
+            # Get validated insights
+            insights = db.query(ValidatedInsight).all()
+            if insights:
+                db_context += "\nValidated Problem Statements:\n"
+                for i in insights:
+                    db_context += f"- Theme [{i.theme_tag}] ({i.validation_status}): {i.insight_statement}\n"
+                    
+            system_prompt = f"""You are an expert AI Research Assistant analyzing customer feedback for Blinkit.
+Your goal is to help product managers understand why users don't explore new categories and stick to routine orders.
+Answer the user's questions based primarily on the data provided below. Keep your answers concise, professional, and directly address the problem statement.
+
+{db_context}
+"""
+            
+            # Call Groq API
+            api_key = os.environ.get("GROQ_API_KEY")
+            if not api_key:
+                st.error("⚠️ GROQ_API_KEY is not set in the Streamlit Secrets. Please add it to chat with the AI.")
+            else:
+                try:
+                    headers = {
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json"
+                    }
+                    
+                    api_messages = [{"role": "system", "content": system_prompt}]
+                    # Append the last 5 messages for context
+                    for m in st.session_state.messages[-5:]:
+                        api_messages.append({"role": m["role"], "content": m["content"]})
+                        
+                    payload = {
+                        "model": "llama-3.1-8b-instant",
+                        "messages": api_messages,
+                        "temperature": 0.7
+                    }
+                    
+                    with st.spinner("Analyzing data..."):
+                        response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
+                        response.raise_for_status()
+                        answer = response.json()["choices"][0]["message"]["content"]
+                        
+                    st.markdown(answer)
+                    st.session_state.messages.append({"role": "assistant", "content": answer})
+                except Exception as e:
+                    st.error(f"Failed to communicate with Groq AI: {e}")
