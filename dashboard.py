@@ -191,7 +191,7 @@ with tab3:
     if source_filter != "All":
         query = query.filter(RawReview.source == source_filter)
     if search_query:
-        query = query.filter(RawReview.content.ilike(f"%{search_query}%"))
+        query = query.filter(RawReview.review_text.ilike(f"%{search_query}%"))
         
     reviews = query.order_by(RawReview.timestamp.desc()).limit(100).all()
     
@@ -202,7 +202,7 @@ with tab3:
             "Date": r.timestamp,
             "Source": r.source,
             "Rating": r.rating,
-            "Content": r.content
+            "Content": r.review_text
         } for r in reviews])
         
         st.dataframe(df_reviews, use_container_width=True, hide_index=True)
