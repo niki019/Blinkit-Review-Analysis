@@ -1,16 +1,38 @@
-# Blinkit Review Analyzer Documentation
+# 🛍️ Blinkit Review Analyzer & AI Agent
 
-This folder contains the complete documentation, design specifications, and architecture flows for the **Blinkit Review Analyzer** project.
+An automated, AI-driven pipeline for analyzing customer reviews, extracting high-level themes, and streamlining the product research validation process. This repository acts as both a **Serverless AI Backend** and an **Interactive Data Dashboard**.
 
-## Project Workspace Status
-- [Task List](file:///E:/blinkit-review-analyzer/task.md) - Tracking task checklists and implementation status.
-- [Phase 1 Walkthrough](file:///E:/blinkit-review-analyzer/walkthrough.md) - Validation results and codebase walk for the Phase 1 Ingestion layer.
+## 🚀 Live Deployments (For Mentors & Reviewers)
 
-## Document Directory
-- [README.md](file:///E:/blinkit-review-analyzer/README.md) - Project overview and documentation index.
-- [Implementation Plan](file:///E:/blinkit-review-analyzer/implementation_plan.md) - Phase-wise development schedule and verification plan.
-- [Problem Statement (Markdown Version)](file:///E:/blinkit-review-analyzer/problemStatement.md) - Formatted problem statement context, data sources, themes, and tool requirements.
-- [Problem Statement (Raw Text Version)](file:///E:/blinkit-review-analyzer/problemStatement.txt) - Plain text version of the problem statement.
-- [Project Context](file:///E:/blinkit-review-analyzer/context.md) - Goals, problem description, and key ingestion fields.
-- [System Architecture](file:///E:/blinkit-review-analyzer/architecture.md) - Data flows, components, and tech stack details.
-- [Edge Cases](file:///E:/blinkit-review-analyzer/edge_case.md) - Edge cases, failure modes, and mitigation strategies.
+### 1. Interactive Web Dashboard (Streamlit)
+> **🔗 [View the Live Dashboard Here](https://blinkit-review-analysis-a295hhi3qmcxcqvvhg3g.streamlit.app/)**
+
+The dashboard allows researchers to:
+* **View Raw Data**: Browse a paginated database of user reviews from App Store, Play Store, and social media.
+* **Analyze AI Themes**: Visualize NLP-extracted problem themes, ranked dynamically by Frequency × Source Diversity.
+* **Validation Workspace**: Select themes, draft formal problem statements, attach interview quotes, and save them.
+* **Google Workspace Export**: Push finalized insights directly into Google Docs via a single button click.
+
+*(Note: The Streamlit dashboard connects to a pre-seeded SQLite database so mentors can view the visualizations immediately without running the ingestion pipelines).*
+
+---
+
+### 2. Headless Backend API (Vercel Serverless)
+> **🔗 [View API Health Check](https://blinkit-pulse.vercel.app/)**
+
+The backend is built with **FastAPI** and is designed to act as an MCP (Model Context Protocol) Server. It exposes endpoints that can be plugged directly into LLMs (like Claude Desktop) or Automation Tools (like n8n) so that the AI can act as your interface. 
+
+---
+
+## 🏗️ Technical Architecture
+* **Frontend**: Streamlit, Plotly, Pandas
+* **Backend API**: FastAPI, Uvicorn, SQLAlchemy
+* **LLM Engine**: Groq API (`llama-3.1-8b-instant`)
+* **Integrations**: Google Workspace APIs (Docs & Gmail), n8n Webhooks
+
+## 📚 Project Documentation
+For a deep dive into the architecture, edge cases, and implementation phases, refer to the documentation files in this repository:
+* [`architecture.md`](./architecture.md) - System design and data flows.
+* [`context.md`](./context.md) - Product goals and ingestion parameters.
+* [`edge_case.md`](./edge_case.md) - Failure modes and mitigation strategies.
+* [`implementation_plan.md`](./implementation_plan.md) - Development phases.
