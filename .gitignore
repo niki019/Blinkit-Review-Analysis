@@ -2,9 +2,10 @@
 __pycache__/
 *.pyc
 .env
-reviews.db
-reviews.db-shm
-reviews.db-wal
+# Database (Uncomment to ignore)
+# reviews.db
+# reviews.db-shm
+# reviews.db-wal
 raw_reviews.json
 normalized_reviews.json
 mcp_server/credentials.json
