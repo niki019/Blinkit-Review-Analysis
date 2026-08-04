@@ -257,7 +257,11 @@ Answer the user's questions based primarily on the data provided below. Keep you
 """
             
             # Call Groq API
-            api_key = os.environ.get("GROQ_API_KEY")
+            try:
+                api_key = st.secrets["GROQ_API_KEY"]
+            except Exception:
+                api_key = os.environ.get("GROQ_API_KEY")
+                
             if not api_key:
                 st.error("⚠️ GROQ_API_KEY is not set in the Streamlit Secrets. Please add it to chat with the AI.")
             else:
